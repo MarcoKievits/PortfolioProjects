@@ -1,0 +1,266 @@
+SELECT *
+FROM Sales;
+
+--What insights do we want to gain?
+--1. What was the total revenue? 
+--Making sure the "sales" is showing the correct numbers using this query
+SELECT (Quantityordered * Priceeach), Sales
+FROM Sales;
+
+--Total Revenue
+SELECT SUM(Sales) AS TotalRevenue
+FROM Sales;
+
+--2. What was the revenue per quarter of each year?
+SELECT YEAR_ID, QTR_ID, SUM(sales) AS RevenuePerQuarter
+FROM Sales
+GROUP BY YEAR_ID, QTR_ID
+ORDER BY YEAR_ID, QTR_ID;
+
+--3. Whats the monthly revenue of each year?
+-- First things first i want to create a month table showing the actual month names instead of a month number.
+CREATE TABLE Months (
+   MonthID INT NOT NULL PRIMARY KEY,
+   MonthName VARCHAR(255) NOT NULL
+);
+-- Insert the month names into the table
+INSERT INTO Months (MonthID, MonthName) VALUES
+    (1, 'January'),
+	(2, 'Febuary'),
+	(3, 'March'),
+	(4, 'April'),
+	(5, 'May'),
+	(6, 'June'),
+	(7, 'July'),
+	(8, 'August'),
+	(9, 'September'),
+	(10, 'October'),
+	(11, 'November'),
+	(12, 'December')
+;
+-- Check the results and Join them together using the JOIN statement.
+SELECT *
+FROM Months;
+---
+SELECT s.YEAR_ID, s.MONTH_ID, SUM(s.sales) AS MonthlyRevenuePerYear, 
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+ORDER BY s.YEAR_ID, s.MONTH_ID;
+
+
+-- If we want to split them up per year (for visualization purposes) we can add a WHERE statement like this :
+SELECT s.YEAR_ID, s.MONTH_ID, SUM(s.sales) AS RevenuePerMonth2003,
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+WHERE YEAR_ID = 2003
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+ORDER BY s.YEAR_ID, s.MONTH_ID;
+
+SELECT s.YEAR_ID, s.MONTH_ID, SUM(s.sales) AS RevenuePerMonth2004,
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+WHERE YEAR_ID = 2004
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+ORDER BY s.YEAR_ID, s.MONTH_ID;
+
+SELECT s.YEAR_ID, s.MONTH_ID, SUM(s.sales) AS RevenuePerMonth2005,
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+WHERE YEAR_ID = 2005
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+ORDER BY s.YEAR_ID, s.MONTH_ID;
+
+--4. Whats the yearly revenue?
+SELECT YEAR_ID, SUM(sales) AS RevenuePerYear
+FROM Sales
+GROUP BY YEAR_ID
+ORDER BY YEAR_ID;
+
+--5. Whats the total revenue per country?
+SELECT COUNTRY, SUM(sales) AS TotalRevenuePerCountry
+FROM Sales
+GROUP BY COUNTRY
+ORDER BY COUNTRY;
+
+--6. What is the difference in monthly revenue per year?
+SELECT s.YEAR_ID, s.MONTH_ID, SUM(s.sales) AS MonthlyRevenuePerYear,
+       m.Monthname
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+ORDER BY s.MONTH_ID;
+
+-------------------
+-- Now i want to look at the Quantity Ordered.
+--1. Whats the total ordered quantity?
+SELECT SUM(quantityordered) AS TotalOrderedQuantity
+FROM Sales;
+
+--2. Whats the ordered quantity per year?
+SELECT YEAR_ID AS "Year", SUM(quantityordered) AS QuantityPerYear
+FROM Sales
+GROUP BY YEAR_ID
+ORDER BY YEAR_ID DESC;
+
+--3. Whats the ordered quantity per country?
+SELECT COUNTRY AS country, SUM(quantityordered) AS QuantityPerCountry
+FROM Sales
+GROUP BY COUNTRY
+ORDER BY COUNTRY DESC;
+
+--4. Whats the monthly ordered quantity?
+SELECT s.YEAR_ID, s.MONTH_ID AS month, SUM(s.quantityordered) AS QuantityPerMonth,
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+ORDER BY YEAR_ID, MONTH_ID;
+
+-----------------------
+--Now i want to dive into the status of delivering
+
+--1. How often do which statuses occur?
+SELECT DISTINCT("STATUS"), COUNT("STATUS") AS Amount
+FROM Sales
+GROUP BY "STATUS"
+ORDER BY 2 DESC;
+
+--2. Which month had the most cancelled statuses?
+SELECT s.YEAR_ID AS "Year", s.MONTH_ID AS "Month", COUNT(s."STATUS") AS AmountCancelled,
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON MONTH_ID = MonthID
+WHERE "STATUS" = 'Cancelled'
+GROUP BY s.YEAR_ID, s.MONTH_ID, s."STATUS", MonthName
+ORDER BY MONTH_ID;
+
+--3. Which country had the most cancelled statuses?
+SELECT COUNTRY AS Country, COUNT("STATUS") AS AmountCancelledPerCountry
+FROM Sales
+WHERE "STATUS" = 'Cancelled'
+GROUP BY COUNTRY
+ORDER BY COUNTRY;
+
+-----------------------------
+-- Now i want to look at the Dealsize Prices
+
+--1. Whats the average price per dealsize?
+SELECT DISTINCT(DEALSIZE) AS Dealsize, COUNT(DEALSIZE) AS Amount, AVG(PRICEEACH) AS AveragePrice
+FROM Sales
+GROUP BY DEALSIZE
+ORDER BY DEALSIZE;
+
+--2 Whats the average Quantity per dealsize?
+SELECT DISTINCT(DEALSIZE) AS Dealsize, COUNT(DEALSIZE) AS Amount, AVG(QUANTITYORDERED) AS AverageQuantity
+FROM Sales
+GROUP BY DEALSIZE
+ORDER BY DEALSIZE;
+
+--3 How often does each dealsize occur?
+SELECT DISTINCT(DEALSIZE) AS Dealsize, COUNT(DEALSIZE) AS Amount
+FROM Sales
+GROUP BY DEALSIZE
+ORDER BY DEALSIZE;
+---------------------------------
+-- Time to make some of these query's into views for my visualization in Power BI.
+-- Revenue Views
+CREATE VIEW TotalRevenue AS
+SELECT SUM(Sales) AS TotalRevenue
+FROM Sales;
+
+CREATE VIEW RevenuePerQuarter AS
+SELECT YEAR_ID, QTR_ID, SUM(sales) AS RevenuePerQuarter
+FROM Sales
+GROUP BY YEAR_ID, QTR_ID
+--ORDER BY YEAR_ID, QTR_ID;
+CREATE VIEW RevenuePerMonth2003 AS
+SELECT s.YEAR_ID, s.MONTH_ID, SUM(s.sales) AS RevenuePerMonth2003,
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+WHERE YEAR_ID = 2003
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+--ORDER BY s.YEAR_ID, s.MONTH_ID;
+
+
+CREATE VIEW RevenuePerMonth2004 AS
+SELECT s.YEAR_ID, s.MONTH_ID, SUM(s.sales) AS RevenuePerMonth2004,
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+WHERE YEAR_ID = 2004
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+--ORDER BY s.YEAR_ID, s.MONTH_ID;
+
+CREATE VIEW RevenuePerMonth2005 AS
+SELECT s.YEAR_ID, s.MONTH_ID, SUM(s.sales) AS RevenuePerMonth2005,
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+WHERE YEAR_ID = 2005
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+--ORDER BY s.YEAR_ID, s.MONTH_ID;
+
+CREATE VIEW RevenuePerYear AS
+SELECT YEAR_ID, SUM(sales) AS RevenuePerYear
+FROM Sales
+GROUP BY YEAR_ID
+--ORDER BY YEAR_ID;
+
+CREATE VIEW TotalRevenuePerCountry AS
+SELECT COUNTRY, SUM(sales) AS RevenuePerCountry
+FROM Sales
+GROUP BY COUNTRY
+--ORDER BY COUNTRY;
+
+CREATE VIEW RevenuePerMonthEachYear AS
+SELECT s.YEAR_ID, s.MONTH_ID, SUM(s.sales) AS MonthlyRevenuePerYear,
+       m.Monthname
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+--ORDER BY s.MONTH_ID;
+-----------------------------------
+--QuantityOrdered Views
+CREATE VIEW TotalOrderedQuantity AS
+SELECT SUM(quantityordered) AS TotalOrderedQuantity
+FROM Sales;
+
+CREATE VIEW QuantityOrderedPerYear AS
+SELECT YEAR_ID AS "Year", SUM(quantityordered) AS QuantityPerYear
+FROM Sales
+GROUP BY YEAR_ID
+--ORDER BY YEAR_ID DESC;
+
+CREATE VIEW QuantityPerCountry AS
+SELECT COUNTRY AS country, SUM(quantityordered) AS QuantityPerCountry
+FROM Sales
+GROUP BY COUNTRY
+--ORDER BY COUNTRY DESC;
+CREATE VIEW QuantityPerMonth AS
+SELECT s.YEAR_ID, s.MONTH_ID AS month, SUM(s.quantityordered) AS QuantityPerMonth,
+       m.MonthName
+FROM PortfolioProject.dbo.Sales AS s
+INNER JOIN Months AS m ON s.MONTH_ID = m.MonthID
+GROUP BY s.YEAR_ID, s.MONTH_ID, m.MonthName
+--ORDER BY YEAR_ID, MONTH_ID;
+------------------------------------
+--Creating Views With Links For My Dashboard
+CREATE TABLE URLS (
+   Names VARCHAR(255),
+   URLs VARCHAR(255)
+);
+
+INSERT INTO URLS (Names, URLs) VALUES
+     ('LinkedIn', 'https://www.linkedin.com/in/marco-kievits-5a4229205/'),
+	 ('GitHub', 'https://github.com/MarcoKievits/PortfolioProjects')
+;
+
+CREATE VIEW Links AS
+SELECT * 
+FROM URLS;
